@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskMaster - Tabbed To-Do List</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 4px;
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-200">
+    <div class="max-w-xl mx-auto px-4 py-8 pb-24">
+        
+        <!-- Header Section -->
+        <header class="mb-6 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    TaskMaster
+                    <span class="text-xs font-normal px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 flex items-center gap-1">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Shared Sync
+                    </span>
+                </h1>
+                <p id="current-date" class="text-xs text-slate-500 dark:text-slate-400 mt-1"></p>
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="share-btn" title="Family Sync Key" class="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors flex items-center gap-1.5 text-xs font-medium">
+                    <i class="fa-solid fa-users"></i>
+                    <span class="hidden sm:inline">Family Key</span>
+                </button>
+                <button id="theme-toggle-btn" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                    <i class="fa-solid fa-moon dark:hidden text-lg"></i>
+                    <i class="fa-solid fa-sun hidden dark:block text-lg"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Categories / Tabs Navigation -->
+        <div class="flex items-center gap-2 mb-4">
+            <div id="tabs-container" class="flex-1 flex overflow-x-auto gap-2 pb-2 custom-scrollbar">
+                <!-- Dynamic Category Tabs injected here -->
+            </div>
+            <!-- Edit Active Category Button -->
+            <button id="edit-category-btn" title="Edit Current Category" class="p-2.5 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors flex-shrink-0">
+                <i class="fa-solid fa-pen-to-square"></i>
+            </button>
+        </div>
+
+        <!-- Add Task Bar -->
+        <form id="add-task-form" class="mb-6 flex gap-2">
+            <input type="text" id="task-input" placeholder="Add a new task..." required
+                   class="flex-1 px-4 py-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white text-sm shadow-sm transition-all">
+            <button type="submit" class="px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm transition-colors flex items-center gap-2 shadow-sm">
+                <i class="fa-solid fa-plus"></i>
+                <span class="hidden sm:inline">Add</span>
+            </button>
+        </form>
+
+        <!-- Task Filters -->
+        <div class="flex items-center justify-between mb-4 px-1 text-xs text-slate-500 dark:text-slate-400">
+            <span id="task-count">0 tasks remaining</span>
+            <div class="flex gap-1 bg-slate-200 dark:bg-slate-800 p-1 rounded-lg">
+                <button data-filter="all" class="filter-btn px-2.5 py-1 rounded-md font-medium transition-colors bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs">All</button>
+                <button data-filter="active" class="filter-btn px-2.5 py-1 rounded-md font-medium transition-colors hover:text-slate-900 dark:hover:text-white">Active</button>
+                <button data-filter="completed" class="filter-btn px-2.5 py-1 rounded-md font-medium transition-colors hover:text-slate-900 dark:hover:text-white">Completed</button>
+            </div>
+        </div>
+
+        <!-- Task List -->
+        <ul id="task-list" class="space-y-2">
+            <!-- Dynamic Tasks injected here -->
+        </ul>
+
+    </div>
+
+    <!-- Floating Plus Button (Add New Category) -->
+    <button id="add-category-btn" title="Add New Category" class="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg flex items-center justify-center text-xl transition-all hover:scale-105 active:scale-95 z-30">
+        <i class="fa-solid fa-plus"></i>
+    </button>
+
+    <!-- Family Sync Modal -->
+    <div id="sync-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-md rounded-2xl p-6 shadow-2xl border border-slate-100 dark:border-slate-700">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-house-chimney-user text-indigo-500"></i> Family Sync Settings
+                </h2>
+                <button id="close-sync-modal-btn" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">
+                Share this Family Key with your family members so everyone sees and edits the same tasks and categories in real-time.
+            </p>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Family Key</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="sync-key-input" class="flex-1 px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono text-sm dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <button id="copy-key-btn" class="px-4 py-2.5 rounded-xl bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-xs font-medium transition-colors">
+                            Copy
+                        </button>
+                    </div>
+                </div>
+                <div class="pt-2">
+                    <button id="apply-key-btn" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition-colors">
+                        Join / Switch Family Key
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Modal (Create / Edit) -->
+    <div id="category-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-md rounded-2xl p-6 shadow-2xl border border-slate-100 dark:border-slate-700">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="modal-title" class="text-lg font-bold text-slate-900 dark:text-white">Create New Category</h2>
+                <button id="close-modal-btn" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <form id="category-form" class="space-y-4">
+                <input type="hidden" id="category-id">
+                
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Category Name</label>
+                    <input type="text" id="category-name-input" placeholder="e.g., Fitness, Learning..." required
+                           class="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                </div>
+
+                <!-- Color Selection -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">Color Theme</label>
+                    <div id="color-options" class="flex gap-3">
+                        <!-- Color radio options injected by JS -->
+                    </div>
+                </div>
+
+                <!-- Icon Selection -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">Icon</label>
+                    <div id="icon-options" class="grid grid-cols-6 gap-2">
+                        <!-- Icon options injected by JS -->
+                    </div>
+                </div>
+
+                <div class="flex gap-2 pt-2">
+                    <button type="button" id="delete-category-btn" class="hidden px-4 py-2.5 rounded-xl bg-rose-100 text-rose-600 hover:bg-rose-200 dark:bg-rose-900/30 dark:text-rose-400 text-sm font-medium transition-colors">
+                        Delete
+                    </button>
+                    <button type="submit" class="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition-colors">
+                        Save Category
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase Configuration setup
+        const firebaseConfig = typeof __firebase_config !== 'undefined' 
+            ? JSON.parse(__firebase_config) 
+            : {
+                apiKey: "AIzaSyDemoConfigKeyForGitHubPagesUser123",
+                authDomain: "taskmaster-demo.firebaseapp.com",
+                projectId: "taskmaster-demo",
+                storageBucket: "taskmaster-demo.appspot.com",
+                messagingSenderId: "1234567890",
+                appId: "1:1234567890:web:demo1234567890"
+            };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'family-todo-app';
+        let familyKey = localStorage.getItem('tm_family_key') || 'our-family-tasks';
+
+        // Preset Colors and Icons for Categories
+        const COLOR_PRESETS = [
+            { name: 'indigo', bg: 'bg-indigo-500', text: 'text-indigo-500', border: 'border-indigo-500' },
+            { name: 'emerald', bg: 'bg-emerald-500', text: 'text-emerald-500', border: 'border-emerald-500' },
+            { name: 'amber', bg: 'bg-amber-500', text: 'text-amber-500', border: 'border-amber-500' },
+            { name: 'rose', bg: 'bg-rose-500', text: 'text-rose-500', border: 'border-rose-500' },
+            { name: 'purple', bg: 'bg-purple-500', text: 'text-purple-500', border: 'border-purple-500' },
+            { name: 'sky', bg: 'bg-sky-500', text: 'text-sky-500', border: 'border-sky-500' }
+        ];
+
+        const ICON_PRESETS = [
+            'fa-user', 'fa-briefcase', 'fa-cart-shopping', 'fa-heart', 
+            'fa-book', 'fa-dumbbell', 'fa-plane', 'fa-code', 
+            'fa-music', 'fa-utensils', 'fa-house', 'fa-star'
+        ];
+
+        const DEFAULT_CATEGORIES = [
+            { id: 'personal', name: 'Personal', color: 'indigo', icon: 'fa-user' },
+            { id: 'work', name: 'Work', color: 'emerald', icon: 'fa-briefcase' },
+            { id: 'shopping', name: 'Shopping', color: 'amber', icon: 'fa-cart-shopping' }
+        ];
+
+        // Application State
+        let categories = DEFAULT_CATEGORIES;
+        let tasks = [];
+        let activeCategoryId = 'personal';
+        let currentFilter = 'all';
+        let selectedColor = COLOR_PRESETS[0].name;
+        let selectedIcon = ICON_PRESETS[0];
+        let unsubscribeSnapshot = null;
+        let isAuthReady = false;
+
+        // DOM Elements
+        const currentDateEl = document.getElementById('current-date');
+        const themeToggleBtn = document.getElementById('theme-toggle-btn');
+        const tabsContainer = document.getElementById('tabs-container');
+        const taskList = document.getElementById('task-list');
+        const addTaskForm = document.getElementById('add-task-form');
+        const taskInput = document.getElementById('task-input');
+        const taskCountEl = document.getElementById('task-count');
+        const filterBtns = document.querySelectorAll('.filter-btn');
+
+        // Modal Elements
+        const addCategoryBtn = document.getElementById('add-category-btn');
+        const editCategoryBtn = document.getElementById('edit-category-btn');
+        const categoryModal = document.getElementById('category-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const categoryForm = document.getElementById('category-form');
+        const categoryIdInput = document.getElementById('category-id');
+        const categoryNameInput = document.getElementById('category-name-input');
+        const modalTitle = document.getElementById('modal-title');
+        const deleteCategoryBtn = document.getElementById('delete-category-btn');
+        const colorOptionsContainer = document.getElementById('color-options');
+        const iconOptionsContainer = document.getElementById('icon-options');
+
+        // Sync Modal Elements
+        const shareBtn = document.getElementById('share-btn');
+        const syncModal = document.getElementById('sync-modal');
+        const closeSyncModalBtn = document.getElementById('close-sync-modal-btn');
+        const syncKeyInput = document.getElementById('sync-key-input');
+        const copyKeyBtn = document.getElementById('copy-key-btn');
+        const applyKeyBtn = document.getElementById('apply-key-btn');
+
+        // Init App
+        async function init() {
+            renderDate();
+            initTheme();
+            renderColorPicker();
+            renderIconPicker();
+            setupEventListeners();
+            
+            // Authenticate and establish real-time Firestore synchronization
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                isAuthReady = true;
+                subscribeToCloudData();
+            } catch (err) {
+                console.error("Cloud Auth Error, using local fallback:", err);
+                categories = JSON.parse(localStorage.getItem('tm_categories')) || DEFAULT_CATEGORIES;
+                tasks = JSON.parse(localStorage.getItem('tm_tasks')) || [];
+                renderCategories();
+                renderTasks();
+            }
+        }
+
+        // Real-time Cloud Sync Listener (Firestore)
+        function subscribeToCloudData() {
+            if (!isAuthReady) return;
+            if (unsubscribeSnapshot) unsubscribeSnapshot();
+
+            const sharedDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'family_groups', familyKey);
+
+            unsubscribeSnapshot = onSnapshot(sharedDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    categories = data.categories && data.categories.length > 0 ? data.categories : DEFAULT_CATEGORIES;
+                    tasks = data.tasks || [];
+                } else {
+                    // Seed initial cloud state if doc doesn't exist yet
+                    saveDataToCloud();
+                }
+
+                if (!categories.some(c => c.id === activeCategoryId)) {
+                    activeCategoryId = categories[0]?.id || 'personal';
+                }
+
+                renderCategories();
+                renderTasks();
+            }, (error) => {
+                console.error("Sync listener error:", error);
+            });
+        }
+
+        // Push data to Cloud Database
+        async function saveDataToCloud() {
+            // Also store backup locally
+            localStorage.setItem('tm_categories', JSON.stringify(categories));
+            localStorage.setItem('tm_tasks', JSON.stringify(tasks));
+
+            if (!isAuthReady) return;
+
+            try {
+                const sharedDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'family_groups', familyKey);
+                await setDoc(sharedDocRef, {
+                    categories: categories,
+                    tasks: tasks,
+                    updatedAt: new Date().toISOString()
+                });
+            } catch (err) {
+                console.error("Error pushing updates to cloud:", err);
+            }
+        }
+
+        // Date Display
+        function renderDate() {
+            if (currentDateEl) {
+                const options = { weekday: 'long', month: 'short', day: 'numeric' };
+                currentDateEl.textContent = new Date().toLocaleDateString('en-US', options);
+            }
+        }
+
+        // Dark Mode Initialization
+        function initTheme() {
+            if (localStorage.getItem('tm_theme') === 'dark' || 
+                (!localStorage.getItem('tm_theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('tm_theme', isDark ? 'dark' : 'light');
+        }
+
+        // Render Color Choices in Modal
+        function renderColorPicker() {
+            colorOptionsContainer.innerHTML = COLOR_PRESETS.map(c => `
+                <button type="button" data-color="${c.name}" class="color-select-btn w-8 h-8 rounded-full ${c.bg} flex items-center justify-center text-white transition-transform ${selectedColor === c.name ? 'ring-2 ring-offset-2 ring-slate-400 dark:ring-offset-slate-800 scale-110' : 'hover:scale-105'}">
+                    ${selectedColor === c.name ? '<i class="fa-solid fa-check text-xs"></i>' : ''}
+                </button>
+            `).join('');
+
+            document.querySelectorAll('.color-select-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    selectedColor = btn.dataset.color;
+                    renderColorPicker();
+                });
+            });
+        }
+
+        // Render Icon Choices in Modal
+        function renderIconPicker() {
+            iconOptionsContainer.innerHTML = ICON_PRESETS.map(icon => `
+                <button type="button" data-icon="${icon}" class="icon-select-btn p-2 rounded-xl border ${selectedIcon === icon ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'} hover:border-indigo-300 transition-colors">
+                    <i class="fa-solid ${icon}"></i>
+                </button>
+            `).join('');
+
+            document.querySelectorAll('.icon-select-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    selectedIcon = btn.dataset.icon;
+                    renderIconPicker();
+                });
+            });
+        }
+
+        // Render Category Tabs
+        function renderCategories() {
+            tabsContainer.innerHTML = categories.map(cat => {
+                const isActive = cat.id === activeCategoryId;
+                const activeClasses = isActive 
+                    ? 'bg-indigo-600 text-white shadow-sm' 
+                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700';
+                
+                const count = tasks.filter(t => t.categoryId === cat.id && !t.completed).length;
+
+                return `
+                    <button data-id="${cat.id}" class="category-tab px-4 py-2 rounded-xl flex items-center gap-2 font-medium text-sm whitespace-nowrap transition-all ${activeClasses}">
+                        <i class="fa-solid ${cat.icon}"></i>
+                        <span>${escapeHtml(cat.name)}</span>
+                        ${count > 0 ? `<span class="px-1.5 py-0.5 text-xs rounded-full ${isActive ? 'bg-indigo-500 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}">${count}</span>` : ''}
+                    </button>
+                `;
+            }).join('');
+
+            document.querySelectorAll('.category-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    activeCategoryId = tab.dataset.id;
+                    renderCategories();
+                    renderTasks();
+                });
+            });
+        }
+
+        // Render Tasks
+        function renderTasks() {
+            const categoryTasks = tasks.filter(t => t.categoryId === activeCategoryId);
+            const filteredTasks = categoryTasks.filter(t => {
+                if (currentFilter === 'active') return !t.completed;
+                if (currentFilter === 'completed') return t.completed;
+                return true;
+            });
+
+            // Update remaining count
+            const activeCount = categoryTasks.filter(t => !t.completed).length;
+            taskCountEl.textContent = `${activeCount} task${activeCount === 1 ? '' : 's'} remaining`;
+
+            if (filteredTasks.length === 0) {
+                taskList.innerHTML = `
+                    <li class="text-center py-12 text-slate-400 dark:text-slate-500">
+                        <i class="fa-regular fa-clipboard text-4xl mb-3 block"></i>
+                        <p class="text-sm">No tasks in this category</p>
+                    </li>
+                `;
+                return;
+            }
+
+            taskList.innerHTML = filteredTasks.map(task => `
+                <li class="group flex items-center justify-between p-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl transition-all hover:border-slate-300 dark:hover:border-slate-600">
+                    <label class="flex items-center gap-3 flex-1 cursor-pointer min-w-0 pr-2">
+                        <input type="checkbox" ${task.completed ? 'checked' : ''} data-id="${task.id}" class="toggle-task w-5 h-5 accent-indigo-600 rounded cursor-pointer">
+                        <span class="text-sm ${task.completed ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'} truncate">${escapeHtml(task.text)}</span>
+                    </label>
+                    <button data-id="${task.id}" class="delete-task p-1.5 text-slate-400 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <i class="fa-solid fa-trash-can text-sm"></i>
+                    </button>
+                </li>
+            `).join('');
+
+            // Task completion toggling
+            document.querySelectorAll('.toggle-task').forEach(checkbox => {
+                checkbox.addEventListener('change', (e) => {
+                    const taskId = e.target.dataset.id;
+                    const task = tasks.find(t => t.id === taskId);
+                    if (task) {
+                        task.completed = e.target.checked;
+                        saveDataToCloud();
+                    }
+                });
+            });
+
+            // Task Deletion
+            document.querySelectorAll('.delete-task').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const taskId = btn.dataset.id;
+                    tasks = tasks.filter(t => t.id !== taskId);
+                    saveDataToCloud();
+                });
+            });
+        }
+
+        // Open Modal for Creating or Editing Categories
+        function openCategoryModal(categoryId = null) {
+            if (categoryId) {
+                const cat = categories.find(c => c.id === categoryId);
+                if (!cat) return;
+                modalTitle.textContent = 'Edit Category';
+                categoryIdInput.value = cat.id;
+                categoryNameInput.value = cat.name;
+                selectedColor = cat.color;
+                selectedIcon = cat.icon;
+                deleteCategoryBtn.classList.remove('hidden');
+            } else {
+                modalTitle.textContent = 'Create New Category';
+                categoryIdInput.value = '';
+                categoryNameInput.value = '';
+                selectedColor = COLOR_PRESETS[0].name;
+                selectedIcon = ICON_PRESETS[0];
+                deleteCategoryBtn.classList.add('hidden');
+            }
+            renderColorPicker();
+            renderIconPicker();
+            categoryModal.classList.remove('hidden');
+            categoryNameInput.focus();
+        }
+
+        function closeCategoryModal() {
+            categoryModal.classList.add('hidden');
+        }
+
+        // Event Listeners
+        function setupEventListeners() {
+            // Theme button
+            themeToggleBtn.addEventListener('click', toggleTheme);
+
+            // Add Task
+            addTaskForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const text = taskInput.value.trim();
+                if (!text) return;
+
+                tasks.push({
+                    id: 'task_' + Date.now(),
+                    categoryId: activeCategoryId,
+                    text: text,
+                    completed: false
+                });
+
+                taskInput.value = '';
+                saveDataToCloud();
+            });
+
+            // Modal Triggers
+            addCategoryBtn.addEventListener('click', () => openCategoryModal());
+            editCategoryBtn.addEventListener('click', () => openCategoryModal(activeCategoryId));
+            closeModalBtn.addEventListener('click', closeCategoryModal);
+
+            // Save Category Form
+            categoryForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const id = categoryIdInput.value;
+                const name = categoryNameInput.value.trim();
+                if (!name) return;
+
+                if (id) {
+                    const cat = categories.find(c => c.id === id);
+                    if (cat) {
+                        cat.name = name;
+                        cat.color = selectedColor;
+                        cat.icon = selectedIcon;
+                    }
+                } else {
+                    const newId = 'cat_' + Date.now();
+                    categories.push({
+                        id: newId,
+                        name: name,
+                        color: selectedColor,
+                        icon: selectedIcon
+                    });
+                    activeCategoryId = newId;
+                }
+
+                saveDataToCloud();
+                closeCategoryModal();
+            });
+
+            // Delete Category
+            deleteCategoryBtn.addEventListener('click', () => {
+                const id = categoryIdInput.value;
+                if (!id || categories.length <= 1) return;
+
+                categories = categories.filter(c => c.id !== id);
+                tasks = tasks.filter(t => t.categoryId !== id);
+                activeCategoryId = categories[0].id;
+
+                saveDataToCloud();
+                closeCategoryModal();
+            });
+
+            // Filter Buttons
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    filterBtns.forEach(b => b.classList.remove('bg-white', 'dark:bg-slate-700', 'text-slate-900', 'dark:text-white', 'shadow-xs'));
+                    btn.classList.add('bg-white', 'dark:bg-slate-700', 'text-slate-900', 'dark:text-white', 'shadow-xs');
+                    currentFilter = btn.dataset.filter;
+                    renderTasks();
+                });
+            });
+
+            // Family Sync Modal Handlers
+            shareBtn.addEventListener('click', () => {
+                syncKeyInput.value = familyKey;
+                syncModal.classList.remove('hidden');
+            });
+
+            closeSyncModalBtn.addEventListener('click', () => {
+                syncModal.classList.add('hidden');
+            });
+
+            copyKeyBtn.addEventListener('click', () => {
+                const dummy = document.createElement('textarea');
+                document.body.appendChild(dummy);
+                dummy.value = syncKeyInput.value;
+                dummy.select();
+                document.execCommand('copy');
+                document.body.removeChild(dummy);
+                
+                copyKeyBtn.textContent = 'Copied!';
+                setTimeout(() => { copyKeyBtn.textContent = 'Copy'; }, 2000);
+            });
+
+            applyKeyBtn.addEventListener('click', () => {
+                const newKey = syncKeyInput.value.trim();
+                if (newKey && newKey !== familyKey) {
+                    familyKey = newKey;
+                    localStorage.setItem('tm_family_key', familyKey);
+                    subscribeToCloudData();
+                    syncModal.classList.add('hidden');
+                }
+            });
+        }
+
+        // Helper to prevent script injection in task rendering
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        // Start App
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
