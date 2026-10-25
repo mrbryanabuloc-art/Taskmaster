@@ -1,11 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TaskMaster - Tabbed To-Do List</title>
+    <title>Family Sync To-Do List</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -13,431 +17,370 @@
                 extend: {
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
-                    }
+                    },
                 }
             }
         }
     </script>
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Font -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
         .custom-scrollbar::-webkit-scrollbar {
-            height: 4px;
-            width: 4px;
+            height: 6px;
+            width: 6px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
             background: transparent;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
+            background: rgba(156, 163, 175, 0.4);
+            border-radius: 9999px;
         }
-        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #334155;
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(156, 163, 175, 0.7);
         }
     </style>
 </head>
-<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-200">
-    <div class="max-w-xl mx-auto px-4 py-8 pb-24">
+<body class="bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-full font-sans transition-colors duration-200">
+
+    <div id="app" class="max-w-4xl mx-auto min-h-screen flex flex-col p-4 sm:p-6 lg:p-8">
         
-        <!-- Header Section -->
-        <header class="mb-6 flex justify-between items-center">
+        <!-- Header -->
+        <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div>
-                <h1 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    TaskMaster
-                    <span class="text-xs font-normal px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 flex items-center gap-1">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Shared Sync
-                    </span>
+                <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-list-check text-indigo-600 dark:text-indigo-400"></i>
+                    Family Task Hub
                 </h1>
-                <p id="current-date" class="text-xs text-slate-500 dark:text-slate-400 mt-1"></p>
+                <p id="current-date" class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1"></p>
             </div>
-            <div class="flex items-center gap-2">
-                <button id="share-btn" title="Family Sync Key" class="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors flex items-center gap-1.5 text-xs font-medium">
-                    <i class="fa-solid fa-users"></i>
-                    <span class="hidden sm:inline">Family Key</span>
+            
+            <div class="flex items-center gap-2 self-start sm:self-auto">
+                <!-- Sync Status / Key Modal Trigger -->
+                <button id="sync-key-btn" title="Set Family Sync Key" class="flex items-center gap-2 px-3 py-1.5 text-xs sm:text-sm font-medium bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition">
+                    <span id="sync-status-dot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <i class="fa-solid fa-users text-slate-500"></i>
+                    <span id="sync-key-label" class="max-w-[120px] truncate">Family Sync</span>
                 </button>
-                <button id="theme-toggle-btn" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-                    <i class="fa-solid fa-moon dark:hidden text-lg"></i>
-                    <i class="fa-solid fa-sun hidden dark:block text-lg"></i>
+
+                <!-- Dark Mode Toggle -->
+                <button id="theme-toggle" class="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition" title="Toggle theme">
+                    <i id="theme-toggle-dark-icon" class="fa-solid fa-moon text-lg hidden"></i>
+                    <i id="theme-toggle-light-icon" class="fa-solid fa-sun text-lg"></i>
                 </button>
             </div>
         </header>
 
-        <!-- Categories / Tabs Navigation -->
-        <div class="flex items-center gap-2 mb-4">
-            <div id="tabs-container" class="flex-1 flex overflow-x-auto gap-2 pb-2 custom-scrollbar">
-                <!-- Dynamic Category Tabs injected here -->
+        <!-- Dynamic Category Tabs Header -->
+        <div class="relative mb-6">
+            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-2">
+                <!-- Tab List Container -->
+                <div id="tabs-container" class="flex items-center gap-2 overflow-x-auto custom-scrollbar pb-1 max-w-[calc(100%-80px)] sm:max-w-[calc(100%-100px)]">
+                    <!-- Dynamic Tabs Inserted Here -->
+                </div>
+
+                <!-- Category Actions -->
+                <div class="flex items-center gap-1 pl-2">
+                    <button id="edit-cat-btn" title="Edit current tab" class="p-2 text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                    </button>
+                    <button id="delete-cat-btn" title="Delete current tab" class="p-2 text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
             </div>
-            <!-- Edit Active Category Button -->
-            <button id="edit-category-btn" title="Edit Current Category" class="p-2.5 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors flex-shrink-0">
-                <i class="fa-solid fa-pen-to-square"></i>
-            </button>
         </div>
 
-        <!-- Add Task Bar -->
-        <form id="add-task-form" class="mb-6 flex gap-2">
-            <input type="text" id="task-input" placeholder="Add a new task..." required
-                   class="flex-1 px-4 py-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white text-sm shadow-sm transition-all">
-            <button type="submit" class="px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm transition-colors flex items-center gap-2 shadow-sm">
-                <i class="fa-solid fa-plus"></i>
-                <span class="hidden sm:inline">Add</span>
-            </button>
-        </form>
+        <!-- Task Input Section -->
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-3 sm:p-4 mb-6">
+            <form id="add-task-form" class="flex items-center gap-2">
+                <input type="text" id="task-input" placeholder="Add a new task..." required class="flex-1 bg-transparent px-3 py-2 text-sm sm:text-base focus:outline-none text-slate-800 dark:text-slate-100 placeholder-slate-400">
+                <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg text-sm transition flex items-center gap-2 shadow-sm">
+                    <i class="fa-solid fa-plus"></i>
+                    <span class="hidden sm:inline">Add Task</span>
+                </button>
+            </form>
+        </div>
 
-        <!-- Task Filters -->
-        <div class="flex items-center justify-between mb-4 px-1 text-xs text-slate-500 dark:text-slate-400">
-            <span id="task-count">0 tasks remaining</span>
-            <div class="flex gap-1 bg-slate-200 dark:bg-slate-800 p-1 rounded-lg">
-                <button data-filter="all" class="filter-btn px-2.5 py-1 rounded-md font-medium transition-colors bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs">All</button>
-                <button data-filter="active" class="filter-btn px-2.5 py-1 rounded-md font-medium transition-colors hover:text-slate-900 dark:hover:text-white">Active</button>
-                <button data-filter="completed" class="filter-btn px-2.5 py-1 rounded-md font-medium transition-colors hover:text-slate-900 dark:hover:text-white">Completed</button>
+        <!-- Filter Controls -->
+        <div class="flex items-center justify-between mb-4 px-1 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+            <div class="flex items-center gap-1 bg-slate-200 dark:bg-slate-800 p-1 rounded-lg">
+                <button data-filter="all" class="filter-btn px-3 py-1 rounded-md font-medium transition bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm">All</button>
+                <button data-filter="active" class="filter-btn px-3 py-1 rounded-md font-medium transition hover:text-slate-900 dark:hover:text-white">Active</button>
+                <button data-filter="completed" class="filter-btn px-3 py-1 rounded-md font-medium transition hover:text-slate-900 dark:hover:text-white">Completed</button>
             </div>
+            <span id="task-counter" class="font-medium">0 tasks remaining</span>
         </div>
 
         <!-- Task List -->
-        <ul id="task-list" class="space-y-2">
-            <!-- Dynamic Tasks injected here -->
-        </ul>
-
-    </div>
-
-    <!-- Floating Plus Button (Add New Category) -->
-    <button id="add-category-btn" title="Add New Category" class="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg flex items-center justify-center text-xl transition-all hover:scale-105 active:scale-95 z-30">
-        <i class="fa-solid fa-plus"></i>
-    </button>
-
-    <!-- Family Sync Modal -->
-    <div id="sync-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
-        <div class="bg-white dark:bg-slate-800 w-full max-w-md rounded-2xl p-6 shadow-2xl border border-slate-100 dark:border-slate-700">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <i class="fa-solid fa-house-chimney-user text-indigo-500"></i> Family Sync Settings
-                </h2>
-                <button id="close-sync-modal-btn" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
+        <main class="flex-1">
+            <div id="tasks-list" class="space-y-2">
+                <!-- Dynamic Tasks Render Here -->
             </div>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">
-                Share this Family Key with your family members so everyone sees and edits the same tasks and categories in real-time.
-            </p>
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Family Key</label>
-                    <div class="flex gap-2">
-                        <input type="text" id="sync-key-input" class="flex-1 px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono text-sm dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <button id="copy-key-btn" class="px-4 py-2.5 rounded-xl bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-xs font-medium transition-colors">
-                            Copy
-                        </button>
+        </main>
+
+        <!-- Floating Action Button (+) to Add New Category -->
+        <div class="fixed bottom-6 right-6 z-30">
+            <button id="fab-add-category" class="flex items-center justify-center w-14 h-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-lg hover:shadow-indigo-500/30 transition-all transform hover:scale-105 active:scale-95" title="Add New Category">
+                <i class="fa-solid fa-plus text-xl"></i>
+            </button>
+        </div>
+
+        <!-- Category Modal (Create / Edit) -->
+        <div id="category-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 dark:border-slate-700">
+                <h3 id="modal-title" class="text-xl font-bold mb-4 text-slate-900 dark:text-white">Create New Category</h3>
+                <form id="category-form" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Category Name</label>
+                        <input type="text" id="cat-name-input" required placeholder="e.g. Home, Fitness, Ideas" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-100">
                     </div>
-                </div>
-                <div class="pt-2">
-                    <button id="apply-key-btn" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition-colors">
-                        Join / Switch Family Key
-                    </button>
-                </div>
+                    
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Color Theme</label>
+                        <div class="grid grid-cols-6 gap-2" id="color-selector">
+                            <button type="button" data-color="indigo" class="w-8 h-8 rounded-full bg-indigo-500 ring-2 ring-offset-2 ring-indigo-500"></button>
+                            <button type="button" data-color="emerald" class="w-8 h-8 rounded-full bg-emerald-500"></button>
+                            <button type="button" data-color="amber" class="w-8 h-8 rounded-full bg-amber-500"></button>
+                            <button type="button" data-color="rose" class="w-8 h-8 rounded-full bg-rose-500"></button>
+                            <button type="button" data-color="purple" class="w-8 h-8 rounded-full bg-purple-500"></button>
+                            <button type="button" data-color="sky" class="w-8 h-8 rounded-full bg-sky-500"></button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Icon</label>
+                        <div class="grid grid-cols-6 gap-2 text-slate-600 dark:text-slate-300" id="icon-selector">
+                            <button type="button" data-icon="fa-folder" class="p-2 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-center items-center text-indigo-500"><i class="fa-solid fa-folder"></i></button>
+                            <button type="button" data-icon="fa-briefcase" class="p-2 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-center items-center"><i class="fa-solid fa-briefcase"></i></button>
+                            <button type="button" data-icon="fa-cart-shopping" class="p-2 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-center items-center"><i class="fa-solid fa-cart-shopping"></i></button>
+                            <button type="button" data-icon="fa-heart" class="p-2 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-center items-center"><i class="fa-solid fa-heart"></i></button>
+                            <button type="button" data-icon="fa-star" class="p-2 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-center items-center"><i class="fa-solid fa-star"></i></button>
+                            <button type="button" data-icon="fa-house" class="p-2 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-center items-center"><i class="fa-solid fa-house"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end gap-2 pt-4">
+                        <button type="button" id="close-category-modal" class="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition">Cancel</button>
+                        <button type="submit" class="px-4 py-2 text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition shadow-sm">Save Category</button>
+                    </div>
+                </form>
             </div>
         </div>
-    </div>
 
-    <!-- Category Modal (Create / Edit) -->
-    <div id="category-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
-        <div class="bg-white dark:bg-slate-800 w-full max-w-md rounded-2xl p-6 shadow-2xl border border-slate-100 dark:border-slate-700">
-            <div class="flex justify-between items-center mb-4">
-                <h2 id="modal-title" class="text-lg font-bold text-slate-900 dark:text-white">Create New Category</h2>
-                <button id="close-modal-btn" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
+        <!-- Sync Key Modal -->
+        <div id="sync-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 dark:border-slate-700">
+                <h3 class="text-xl font-bold mb-2 text-slate-900 dark:text-white">Family Sync Settings</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Enter a shared secret key (e.g., <strong>smith-family-2026</strong>) on all your family's devices to sync tasks together in real time.</p>
+                <form id="sync-form" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Family Key</label>
+                        <input type="text" id="sync-key-input" required placeholder="our-family-list" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-100">
+                    </div>
+                    <div class="flex justify-end gap-2 pt-2">
+                        <button type="button" id="close-sync-modal" class="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition">Cancel</button>
+                        <button type="submit" class="px-4 py-2 text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition shadow-sm">Connect Sync</button>
+                    </div>
+                </form>
             </div>
-            
-            <form id="category-form" class="space-y-4">
-                <input type="hidden" id="category-id">
-                
-                <div>
-                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Category Name</label>
-                    <input type="text" id="category-name-input" placeholder="e.g., Fitness, Learning..." required
-                           class="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
-                </div>
-
-                <!-- Color Selection -->
-                <div>
-                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">Color Theme</label>
-                    <div id="color-options" class="flex gap-3">
-                        <!-- Color radio options injected by JS -->
-                    </div>
-                </div>
-
-                <!-- Icon Selection -->
-                <div>
-                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">Icon</label>
-                    <div id="icon-options" class="grid grid-cols-6 gap-2">
-                        <!-- Icon options injected by JS -->
-                    </div>
-                </div>
-
-                <div class="flex gap-2 pt-2">
-                    <button type="button" id="delete-category-btn" class="hidden px-4 py-2.5 rounded-xl bg-rose-100 text-rose-600 hover:bg-rose-200 dark:bg-rose-900/30 dark:text-rose-400 text-sm font-medium transition-colors">
-                        Delete
-                    </button>
-                    <button type="submit" class="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition-colors">
-                        Save Category
-                    </button>
-                </div>
-            </form>
         </div>
+
     </div>
 
-    <!-- Application Script -->
+    <!-- Firebase App & Firestore -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Firebase Configuration setup
-        const firebaseConfig = typeof __firebase_config !== 'undefined' 
-            ? JSON.parse(__firebase_config) 
-            : {
-                apiKey: "AIzaSyDemoConfigKeyForGitHubPagesUser123",
-                authDomain: "taskmaster-demo.firebaseapp.com",
-                projectId: "taskmaster-demo",
-                storageBucket: "taskmaster-demo.appspot.com",
-                messagingSenderId: "1234567890",
-                appId: "1:1234567890:web:demo1234567890"
-            };
+        // Firebase Config Setup
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "AIzaSyDemoKeyOnly_For_Public_Fallback",
+            authDomain: "demo-app.firebaseapp.com",
+            projectId: "demo-app",
+            storageBucket: "demo-app.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:demo"
+        };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'family-todo-app';
-        let familyKey = localStorage.getItem('tm_family_key') || 'our-family-tasks';
+        let syncKey = localStorage.getItem('family_sync_key') || 'default-family';
+        
+        let currentUser = null;
+        let unsubscribeSync = null;
 
-        // Preset Colors and Icons for Categories
-        const COLOR_PRESETS = [
-            { name: 'indigo', bg: 'bg-indigo-500', text: 'text-indigo-500', border: 'border-indigo-500' },
-            { name: 'emerald', bg: 'bg-emerald-500', text: 'text-emerald-500', border: 'border-emerald-500' },
-            { name: 'amber', bg: 'bg-amber-500', text: 'text-amber-500', border: 'border-amber-500' },
-            { name: 'rose', bg: 'bg-rose-500', text: 'text-rose-500', border: 'border-rose-500' },
-            { name: 'purple', bg: 'bg-purple-500', text: 'text-purple-500', border: 'border-purple-500' },
-            { name: 'sky', bg: 'bg-sky-500', text: 'text-sky-500', border: 'border-sky-500' }
+        // Default Categories
+        let categories = JSON.parse(localStorage.getItem('todo_categories')) || [
+            { id: 'personal', name: 'Personal', icon: 'fa-house', color: 'indigo' },
+            { id: 'work', name: 'Work', icon: 'fa-briefcase', color: 'emerald' },
+            { id: 'shopping', name: 'Shopping', icon: 'fa-cart-shopping', color: 'amber' }
         ];
 
-        const ICON_PRESETS = [
-            'fa-user', 'fa-briefcase', 'fa-cart-shopping', 'fa-heart', 
-            'fa-book', 'fa-dumbbell', 'fa-plane', 'fa-code', 
-            'fa-music', 'fa-utensils', 'fa-house', 'fa-star'
+        // Default Tasks
+        let tasks = JSON.parse(localStorage.getItem('todo_tasks')) || [
+            { id: 't1', categoryId: 'personal', text: 'Plan weekend trip', completed: false },
+            { id: 't2', categoryId: 'work', text: 'Prepare weekly summary', completed: true },
+            { id: 't3', categoryId: 'shopping', text: 'Buy groceries', completed: false }
         ];
 
-        const DEFAULT_CATEGORIES = [
-            { id: 'personal', name: 'Personal', color: 'indigo', icon: 'fa-user' },
-            { id: 'work', name: 'Work', color: 'emerald', icon: 'fa-briefcase' },
-            { id: 'shopping', name: 'Shopping', color: 'amber', icon: 'fa-cart-shopping' }
-        ];
-
-        // Application State
-        let categories = DEFAULT_CATEGORIES;
-        let tasks = [];
-        let activeCategoryId = 'personal';
+        let activeCategoryId = categories[0]?.id || 'personal';
         let currentFilter = 'all';
-        let selectedColor = COLOR_PRESETS[0].name;
-        let selectedIcon = ICON_PRESETS[0];
-        let unsubscribeSnapshot = null;
-        let isAuthReady = false;
+        let editingCategoryId = null;
+        let selectedModalColor = 'indigo';
+        let selectedModalIcon = 'fa-folder';
 
-        // DOM Elements
-        const currentDateEl = document.getElementById('current-date');
-        const themeToggleBtn = document.getElementById('theme-toggle-btn');
+        // DOM Element Cache
         const tabsContainer = document.getElementById('tabs-container');
-        const taskList = document.getElementById('task-list');
+        const tasksList = document.getElementById('tasks-list');
         const addTaskForm = document.getElementById('add-task-form');
         const taskInput = document.getElementById('task-input');
-        const taskCountEl = document.getElementById('task-count');
-        const filterBtns = document.querySelectorAll('.filter-btn');
-
-        // Modal Elements
-        const addCategoryBtn = document.getElementById('add-category-btn');
-        const editCategoryBtn = document.getElementById('edit-category-btn');
+        const taskCounter = document.getElementById('task-counter');
+        const currentDateEl = document.getElementById('current-date');
+        
         const categoryModal = document.getElementById('category-modal');
-        const closeModalBtn = document.getElementById('close-modal-btn');
         const categoryForm = document.getElementById('category-form');
-        const categoryIdInput = document.getElementById('category-id');
-        const categoryNameInput = document.getElementById('category-name-input');
+        const catNameInput = document.getElementById('cat-name-input');
         const modalTitle = document.getElementById('modal-title');
-        const deleteCategoryBtn = document.getElementById('delete-category-btn');
-        const colorOptionsContainer = document.getElementById('color-options');
-        const iconOptionsContainer = document.getElementById('icon-options');
-
-        // Sync Modal Elements
-        const shareBtn = document.getElementById('share-btn');
+        
         const syncModal = document.getElementById('sync-modal');
-        const closeSyncModalBtn = document.getElementById('close-sync-modal-btn');
+        const syncForm = document.getElementById('sync-form');
         const syncKeyInput = document.getElementById('sync-key-input');
-        const copyKeyBtn = document.getElementById('copy-key-btn');
-        const applyKeyBtn = document.getElementById('apply-key-btn');
+        const syncKeyLabel = document.getElementById('sync-key-label');
 
-        // Init App
-        async function init() {
-            renderDate();
-            initTheme();
-            renderColorPicker();
-            renderIconPicker();
-            setupEventListeners();
-            
-            // Authenticate and establish real-time Firestore synchronization
+        // Dark mode setup
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+            document.getElementById('theme-toggle-dark-icon')?.classList.remove('hidden');
+            document.getElementById('theme-toggle-light-icon')?.classList.add('hidden');
+        }
+
+        document.getElementById('theme-toggle').addEventListener('click', () => {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.theme = isDark ? 'dark' : 'light';
+            document.getElementById('theme-toggle-dark-icon').classList.toggle('hidden', !isDark);
+            document.getElementById('theme-toggle-light-icon').classList.toggle('hidden', isDark);
+        });
+
+        // Initialize Firebase Authentication
+        async function initAuth() {
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
+                    const userCredential = await signInWithCustomToken(auth, __initial_auth_token);
+                    currentUser = userCredential.user;
                 } else {
-                    await signInAnonymously(auth);
+                    const userCredential = await signInAnonymously(auth);
+                    currentUser = userCredential.user;
                 }
-                isAuthReady = true;
-                subscribeToCloudData();
-            } catch (err) {
-                console.error("Cloud Auth Error, using local fallback:", err);
-                categories = JSON.parse(localStorage.getItem('tm_categories')) || DEFAULT_CATEGORIES;
-                tasks = JSON.parse(localStorage.getItem('tm_tasks')) || [];
-                renderCategories();
-                renderTasks();
+                setupCloudSync();
+            } catch (e) {
+                console.warn('Authentication failed, defaulting to local storage mode:', e);
             }
         }
 
-        // Real-time Cloud Sync Listener (Firestore)
-        function subscribeToCloudData() {
-            if (!isAuthReady) return;
-            if (unsubscribeSnapshot) unsubscribeSnapshot();
+        // Setup Firestore Real-time listener
+        function setupCloudSync() {
+            if (!currentUser) return;
+            if (unsubscribeSync) unsubscribeSync();
 
-            const sharedDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'family_groups', familyKey);
+            syncKeyLabel.textContent = syncKey;
 
-            unsubscribeSnapshot = onSnapshot(sharedDocRef, (docSnap) => {
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'sync_groups', syncKey);
+            
+            unsubscribeSync = onSnapshot(docRef, (docSnap) => {
                 if (docSnap.exists()) {
                     const data = docSnap.data();
-                    categories = data.categories && data.categories.length > 0 ? data.categories : DEFAULT_CATEGORIES;
-                    tasks = data.tasks || [];
+                    if (Array.isArray(data.categories) && data.categories.length > 0) {
+                        categories = data.categories;
+                    }
+                    if (Array.isArray(data.tasks)) {
+                        tasks = data.tasks;
+                    }
+                    if (!categories.find(c => c.id === activeCategoryId)) {
+                        activeCategoryId = categories[0]?.id || 'personal';
+                    }
+                    saveLocal();
+                    renderCategories();
+                    renderTasks();
                 } else {
-                    // Seed initial cloud state if doc doesn't exist yet
                     saveDataToCloud();
                 }
-
-                if (!categories.some(c => c.id === activeCategoryId)) {
-                    activeCategoryId = categories[0]?.id || 'personal';
-                }
-
-                renderCategories();
-                renderTasks();
-            }, (error) => {
-                console.error("Sync listener error:", error);
+            }, (err) => {
+                console.warn('Sync snapshot fallback:', err);
             });
         }
 
-        // Push data to Cloud Database
+        // Save data to cloud and local
         async function saveDataToCloud() {
-            // Also store backup locally
-            localStorage.setItem('tm_categories', JSON.stringify(categories));
-            localStorage.setItem('tm_tasks', JSON.stringify(tasks));
-
-            if (!isAuthReady) return;
-
+            saveLocal();
+            if (!currentUser) return;
             try {
-                const sharedDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'family_groups', familyKey);
-                await setDoc(sharedDocRef, {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'sync_groups', syncKey);
+                await setDoc(docRef, {
                     categories: categories,
                     tasks: tasks,
-                    updatedAt: new Date().toISOString()
+                    updatedAt: Date.now()
                 });
             } catch (err) {
-                console.error("Error pushing updates to cloud:", err);
+                console.error('Failed to sync data to cloud:', err);
             }
         }
 
-        // Date Display
+        function saveLocal() {
+            localStorage.setItem('todo_categories', JSON.stringify(categories));
+            localStorage.setItem('todo_tasks', JSON.stringify(tasks));
+            localStorage.setItem('family_sync_key', syncKey);
+        }
+
+        // Render Date Header
         function renderDate() {
             if (currentDateEl) {
                 const options = { weekday: 'long', month: 'short', day: 'numeric' };
-                currentDateEl.textContent = new Date().toLocaleDateString('en-US', options);
+                currentDateEl.textContent = new Date().toLocaleDateString(undefined, options);
             }
-        }
-
-        // Dark Mode Initialization
-        function initTheme() {
-            if (localStorage.getItem('tm_theme') === 'dark' || 
-                (!localStorage.getItem('tm_theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
-        }
-
-        function toggleTheme() {
-            const isDark = document.documentElement.classList.toggle('dark');
-            localStorage.setItem('tm_theme', isDark ? 'dark' : 'light');
-        }
-
-        // Render Color Choices in Modal
-        function renderColorPicker() {
-            colorOptionsContainer.innerHTML = COLOR_PRESETS.map(c => `
-                <button type="button" data-color="${c.name}" class="color-select-btn w-8 h-8 rounded-full ${c.bg} flex items-center justify-center text-white transition-transform ${selectedColor === c.name ? 'ring-2 ring-offset-2 ring-slate-400 dark:ring-offset-slate-800 scale-110' : 'hover:scale-105'}">
-                    ${selectedColor === c.name ? '<i class="fa-solid fa-check text-xs"></i>' : ''}
-                </button>
-            `).join('');
-
-            document.querySelectorAll('.color-select-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    selectedColor = btn.dataset.color;
-                    renderColorPicker();
-                });
-            });
-        }
-
-        // Render Icon Choices in Modal
-        function renderIconPicker() {
-            iconOptionsContainer.innerHTML = ICON_PRESETS.map(icon => `
-                <button type="button" data-icon="${icon}" class="icon-select-btn p-2 rounded-xl border ${selectedIcon === icon ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'} hover:border-indigo-300 transition-colors">
-                    <i class="fa-solid ${icon}"></i>
-                </button>
-            `).join('');
-
-            document.querySelectorAll('.icon-select-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    selectedIcon = btn.dataset.icon;
-                    renderIconPicker();
-                });
-            });
         }
 
         // Render Category Tabs
         function renderCategories() {
-            tabsContainer.innerHTML = categories.map(cat => {
+            tabsContainer.innerHTML = '';
+            categories.forEach(cat => {
+                const uncompletedCount = tasks.filter(t => t.categoryId === cat.id && !t.completed).length;
                 const isActive = cat.id === activeCategoryId;
-                const activeClasses = isActive 
-                    ? 'bg-indigo-600 text-white shadow-sm' 
-                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700';
-                
-                const count = tasks.filter(t => t.categoryId === cat.id && !t.completed).length;
 
-                return `
-                    <button data-id="${cat.id}" class="category-tab px-4 py-2 rounded-xl flex items-center gap-2 font-medium text-sm whitespace-nowrap transition-all ${activeClasses}">
-                        <i class="fa-solid ${cat.icon}"></i>
-                        <span>${escapeHtml(cat.name)}</span>
-                        ${count > 0 ? `<span class="px-1.5 py-0.5 text-xs rounded-full ${isActive ? 'bg-indigo-500 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}">${count}</span>` : ''}
-                    </button>
+                const tabBtn = document.createElement('button');
+                tabBtn.type = 'button';
+                tabBtn.className = `flex items-center gap-2 px-3.5 py-2 rounded-lg font-medium text-sm transition-all whitespace-nowrap border ${
+                    isActive 
+                        ? 'bg-indigo-50 dark:bg-indigo-950/50 border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 shadow-sm' 
+                        : 'bg-transparent border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`;
+
+                tabBtn.innerHTML = `
+                    <i class="fa-solid ${cat.icon || 'fa-folder'}"></i>
+                    <span>${escapeHtml(cat.name)}</span>
+                    <span class="ml-1 px-1.5 py-0.5 text-xs rounded-full ${
+                        isActive 
+                            ? 'bg-indigo-200 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200' 
+                            : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                    }">${uncompletedCount}</span>
                 `;
-            }).join('');
 
-            document.querySelectorAll('.category-tab').forEach(tab => {
-                tab.addEventListener('click', () => {
-                    activeCategoryId = tab.dataset.id;
+                tabBtn.addEventListener('click', () => {
+                    activeCategoryId = cat.id;
                     renderCategories();
                     renderTasks();
                 });
+
+                tabsContainer.appendChild(tabBtn);
             });
         }
 
         // Render Tasks
         function renderTasks() {
+            tasksList.innerHTML = '';
+
             const categoryTasks = tasks.filter(t => t.categoryId === activeCategoryId);
             const filteredTasks = categoryTasks.filter(t => {
                 if (currentFilter === 'active') return !t.completed;
@@ -445,202 +388,219 @@
                 return true;
             });
 
-            // Update remaining count
-            const activeCount = categoryTasks.filter(t => !t.completed).length;
-            taskCountEl.textContent = `${activeCount} task${activeCount === 1 ? '' : 's'} remaining`;
+            const remainingCount = categoryTasks.filter(t => !t.completed).length;
+            taskCounter.textContent = `${remainingCount} task${remainingCount === 1 ? '' : 's'} remaining`;
 
             if (filteredTasks.length === 0) {
-                taskList.innerHTML = `
-                    <li class="text-center py-12 text-slate-400 dark:text-slate-500">
-                        <i class="fa-regular fa-clipboard text-4xl mb-3 block"></i>
-                        <p class="text-sm">No tasks in this category</p>
-                    </li>
+                tasksList.innerHTML = `
+                    <div class="text-center py-12 bg-white dark:bg-slate-800 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
+                        <i class="fa-solid fa-clipboard-check text-3xl text-slate-300 dark:text-slate-600 mb-2"></i>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm">No tasks in this view</p>
+                    </div>
                 `;
                 return;
             }
 
-            taskList.innerHTML = filteredTasks.map(task => `
-                <li class="group flex items-center justify-between p-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl transition-all hover:border-slate-300 dark:hover:border-slate-600">
-                    <label class="flex items-center gap-3 flex-1 cursor-pointer min-w-0 pr-2">
-                        <input type="checkbox" ${task.completed ? 'checked' : ''} data-id="${task.id}" class="toggle-task w-5 h-5 accent-indigo-600 rounded cursor-pointer">
-                        <span class="text-sm ${task.completed ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'} truncate">${escapeHtml(task.text)}</span>
-                    </label>
-                    <button data-id="${task.id}" class="delete-task p-1.5 text-slate-400 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <i class="fa-solid fa-trash-can text-sm"></i>
-                    </button>
-                </li>
-            `).join('');
+            filteredTasks.forEach(task => {
+                const item = document.createElement('div');
+                item.className = `group flex items-center justify-between p-3.5 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700/80 shadow-sm transition-all hover:border-slate-300 dark:hover:border-slate-600 ${
+                    task.completed ? 'opacity-60 bg-slate-50 dark:bg-slate-800/50' : ''
+                }`;
 
-            // Task completion toggling
-            document.querySelectorAll('.toggle-task').forEach(checkbox => {
-                checkbox.addEventListener('change', (e) => {
+                item.innerHTML = `
+                    <div class="flex items-center gap-3 flex-1 min-w-0">
+                        <input type="checkbox" ${task.completed ? 'checked' : ''} data-id="${task.id}" class="toggle-task w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+                        <span class="text-sm sm:text-base text-slate-800 dark:text-slate-200 truncate ${task.completed ? 'line-through text-slate-400 dark:text-slate-500' : ''}">
+                            ${escapeHtml(task.text)}
+                        </span>
+                    </div>
+                    <button data-id="${task.id}" class="delete-task opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg transition" title="Delete task">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                `;
+
+                tasksList.appendChild(item);
+            });
+
+            // Bind check box toggles
+            document.querySelectorAll('.toggle-task').forEach(cb => {
+                cb.addEventListener('change', (e) => {
                     const taskId = e.target.dataset.id;
                     const task = tasks.find(t => t.id === taskId);
                     if (task) {
                         task.completed = e.target.checked;
+                        renderTasks();
+                        renderCategories();
                         saveDataToCloud();
                     }
                 });
             });
 
-            // Task Deletion
+            // Bind task delete buttons
             document.querySelectorAll('.delete-task').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    const taskId = btn.dataset.id;
+                    const taskId = btn.currentTarget.dataset.id;
                     tasks = tasks.filter(t => t.id !== taskId);
+                    renderTasks();
+                    renderCategories();
                     saveDataToCloud();
                 });
             });
         }
 
-        // Open Modal for Creating or Editing Categories
-        function openCategoryModal(categoryId = null) {
-            if (categoryId) {
-                const cat = categories.find(c => c.id === categoryId);
-                if (!cat) return;
-                modalTitle.textContent = 'Edit Category';
-                categoryIdInput.value = cat.id;
-                categoryNameInput.value = cat.name;
-                selectedColor = cat.color;
-                selectedIcon = cat.icon;
-                deleteCategoryBtn.classList.remove('hidden');
-            } else {
-                modalTitle.textContent = 'Create New Category';
-                categoryIdInput.value = '';
-                categoryNameInput.value = '';
-                selectedColor = COLOR_PRESETS[0].name;
-                selectedIcon = ICON_PRESETS[0];
-                deleteCategoryBtn.classList.add('hidden');
-            }
-            renderColorPicker();
-            renderIconPicker();
+        // Add New Task
+        addTaskForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const text = taskInput.value.trim();
+            if (!text) return;
+
+            const newTask = {
+                id: 'task_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+                categoryId: activeCategoryId,
+                text: text,
+                completed: false
+            };
+
+            tasks.push(newTask);
+            taskInput.value = '';
+
+            // Render instantly
+            renderTasks();
+            renderCategories();
+            saveDataToCloud();
+        });
+
+        // Filter Controls
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.filter-btn').forEach(b => {
+                    b.classList.remove('bg-white', 'dark:bg-slate-700', 'text-slate-900', 'dark:text-white', 'shadow-sm');
+                    b.classList.add('hover:text-slate-900', 'dark:hover:text-white');
+                });
+                e.target.classList.add('bg-white', 'dark:bg-slate-700', 'text-slate-900', 'dark:text-white', 'shadow-sm');
+                currentFilter = e.target.dataset.filter;
+                renderTasks();
+            });
+        });
+
+        // Floating (+) Button - Add Category
+        document.getElementById('fab-add-category').addEventListener('click', () => {
+            editingCategoryId = null;
+            modalTitle.textContent = 'Create New Category';
+            catNameInput.value = '';
             categoryModal.classList.remove('hidden');
-            categoryNameInput.focus();
-        }
+        });
 
-        function closeCategoryModal() {
-            categoryModal.classList.add('hidden');
-        }
+        // Edit Category Button
+        document.getElementById('edit-cat-btn').addEventListener('click', () => {
+            const currentCat = categories.find(c => c.id === activeCategoryId);
+            if (!currentCat) return;
+            editingCategoryId = currentCat.id;
+            modalTitle.textContent = 'Edit Category';
+            catNameInput.value = currentCat.name;
+            categoryModal.classList.remove('hidden');
+        });
 
-        // Event Listeners
-        function setupEventListeners() {
-            // Theme button
-            themeToggleBtn.addEventListener('click', toggleTheme);
-
-            // Add Task
-            addTaskForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const text = taskInput.value.trim();
-                if (!text) return;
-
-                tasks.push({
-                    id: 'task_' + Date.now(),
-                    categoryId: activeCategoryId,
-                    text: text,
-                    completed: false
-                });
-
-                taskInput.value = '';
-                saveDataToCloud();
-            });
-
-            // Modal Triggers
-            addCategoryBtn.addEventListener('click', () => openCategoryModal());
-            editCategoryBtn.addEventListener('click', () => openCategoryModal(activeCategoryId));
-            closeModalBtn.addEventListener('click', closeCategoryModal);
-
-            // Save Category Form
-            categoryForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const id = categoryIdInput.value;
-                const name = categoryNameInput.value.trim();
-                if (!name) return;
-
-                if (id) {
-                    const cat = categories.find(c => c.id === id);
-                    if (cat) {
-                        cat.name = name;
-                        cat.color = selectedColor;
-                        cat.icon = selectedIcon;
-                    }
-                } else {
-                    const newId = 'cat_' + Date.now();
-                    categories.push({
-                        id: newId,
-                        name: name,
-                        color: selectedColor,
-                        icon: selectedIcon
-                    });
-                    activeCategoryId = newId;
-                }
-
-                saveDataToCloud();
-                closeCategoryModal();
-            });
-
-            // Delete Category
-            deleteCategoryBtn.addEventListener('click', () => {
-                const id = categoryIdInput.value;
-                if (!id || categories.length <= 1) return;
-
-                categories = categories.filter(c => c.id !== id);
-                tasks = tasks.filter(t => t.categoryId !== id);
+        // Delete Category Button
+        document.getElementById('delete-cat-btn').addEventListener('click', () => {
+            if (categories.length <= 1) {
+                alert('You must keep at least one category!');
+                return;
+            }
+            if (confirm('Delete this category and all its tasks?')) {
+                tasks = tasks.filter(t => t.categoryId !== activeCategoryId);
+                categories = categories.filter(c => c.id !== activeCategoryId);
                 activeCategoryId = categories[0].id;
-
+                renderCategories();
+                renderTasks();
                 saveDataToCloud();
-                closeCategoryModal();
-            });
+            }
+        });
 
-            // Filter Buttons
-            filterBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    filterBtns.forEach(b => b.classList.remove('bg-white', 'dark:bg-slate-700', 'text-slate-900', 'dark:text-white', 'shadow-xs'));
-                    btn.classList.add('bg-white', 'dark:bg-slate-700', 'text-slate-900', 'dark:text-white', 'shadow-xs');
-                    currentFilter = btn.dataset.filter;
-                    renderTasks();
-                });
+        // Color & Icon Pickers
+        document.querySelectorAll('#color-selector button').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('#color-selector button').forEach(b => b.classList.remove('ring-2', 'ring-offset-2', 'ring-indigo-500'));
+                e.currentTarget.classList.add('ring-2', 'ring-offset-2', 'ring-indigo-500');
+                selectedModalColor = e.currentTarget.dataset.color;
             });
+        });
 
-            // Family Sync Modal Handlers
-            shareBtn.addEventListener('click', () => {
-                syncKeyInput.value = familyKey;
-                syncModal.classList.remove('hidden');
+        document.querySelectorAll('#icon-selector button').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('#icon-selector button').forEach(b => b.classList.remove('text-indigo-500'));
+                e.currentTarget.classList.add('text-indigo-500');
+                selectedModalIcon = e.currentTarget.dataset.icon;
             });
+        });
 
-            closeSyncModalBtn.addEventListener('click', () => {
-                syncModal.classList.add('hidden');
-            });
+        // Save Category Form Submit
+        categoryForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = catNameInput.value.trim();
+            if (!name) return;
 
-            copyKeyBtn.addEventListener('click', () => {
-                const dummy = document.createElement('textarea');
-                document.body.appendChild(dummy);
-                dummy.value = syncKeyInput.value;
-                dummy.select();
-                document.execCommand('copy');
-                document.body.removeChild(dummy);
-                
-                copyKeyBtn.textContent = 'Copied!';
-                setTimeout(() => { copyKeyBtn.textContent = 'Copy'; }, 2000);
-            });
-
-            applyKeyBtn.addEventListener('click', () => {
-                const newKey = syncKeyInput.value.trim();
-                if (newKey && newKey !== familyKey) {
-                    familyKey = newKey;
-                    localStorage.setItem('tm_family_key', familyKey);
-                    subscribeToCloudData();
-                    syncModal.classList.add('hidden');
+            if (editingCategoryId) {
+                const cat = categories.find(c => c.id === editingCategoryId);
+                if (cat) {
+                    cat.name = name;
+                    cat.color = selectedModalColor;
+                    cat.icon = selectedModalIcon;
                 }
-            });
-        }
+            } else {
+                const newCat = {
+                    id: 'cat_' + Date.now(),
+                    name: name,
+                    color: selectedModalColor,
+                    icon: selectedModalIcon
+                };
+                categories.push(newCat);
+                activeCategoryId = newCat.id;
+            }
 
-        // Helper to prevent script injection in task rendering
+            categoryModal.classList.add('hidden');
+            renderCategories();
+            renderTasks();
+            saveDataToCloud();
+        });
+
+        document.getElementById('close-category-modal').addEventListener('click', () => {
+            categoryModal.classList.add('hidden');
+        });
+
+        // Sync Modal Trigger
+        document.getElementById('sync-key-btn').addEventListener('click', () => {
+            syncKeyInput.value = syncKey;
+            syncModal.classList.remove('hidden');
+        });
+
+        document.getElementById('close-sync-modal').addEventListener('click', () => {
+            syncModal.classList.add('hidden');
+        });
+
+        syncForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const key = syncKeyInput.value.trim().toLowerCase().replace(/\s+/g, '-');
+            if (key) {
+                syncKey = key;
+                saveLocal();
+                setupCloudSync();
+                syncModal.classList.add('hidden');
+            }
+        });
+
+        // Helper Utility
         function escapeHtml(str) {
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
-        // Start App
-        window.addEventListener('DOMContentLoaded', init);
+        // Window Load Handler
+        window.onload = function() {
+            renderDate();
+            renderCategories();
+            renderTasks();
+            initAuth();
+        };
     </script>
 </body>
 </html>
