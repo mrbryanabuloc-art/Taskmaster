@@ -2,7 +2,8 @@
 <html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Viewport configured to prevent unintended zooming during drags or taps on mobile devices -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Family Sync To-Do List</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -23,9 +24,16 @@
         }
     </script>
     <style>
+        /* Mobile usability: Prevent pinch/double-tap zooming during dragging & touch interactions */
+        html, body {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            overscroll-behavior-y: none;
+        }
+
         .custom-scrollbar::-webkit-scrollbar {
-            height: 6px;
-            width: 6px;
+            height: 4px;
+            width: 4px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
             background: transparent;
@@ -34,55 +42,57 @@
             background: rgba(156, 163, 175, 0.4);
             border-radius: 9999px;
         }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: rgba(156, 163, 175, 0.7);
+        
+        /* Prevent text zoom when focusing inputs on iOS Safari */
+        input, button, select, textarea {
+            font-size: 16px !important;
         }
     </style>
 </head>
-<body class="bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-full font-sans transition-colors duration-200">
+<body class="bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-full font-sans transition-colors duration-200 select-none">
 
-    <div id="app" class="max-w-4xl mx-auto min-h-screen flex flex-col p-4 sm:p-6 lg:p-8">
+    <div id="app" class="max-w-4xl mx-auto min-h-screen flex flex-col p-3 sm:p-6 lg:p-8">
         
         <!-- Header -->
-        <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <header class="flex items-center justify-between gap-2 mb-4 sm:mb-6">
             <div>
-                <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+                <h1 class="text-xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
                     <i class="fa-solid fa-list-check text-indigo-600 dark:text-indigo-400"></i>
                     Family Task Hub
                 </h1>
-                <p id="current-date" class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1"></p>
+                <p id="current-date" class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5"></p>
             </div>
             
-            <div class="flex items-center gap-2 self-start sm:self-auto">
+            <div class="flex items-center gap-2">
                 <!-- Sync Status / Key Modal Trigger -->
-                <button id="sync-key-btn" title="Set Family Sync Key" class="flex items-center gap-2 px-3 py-1.5 text-xs sm:text-sm font-medium bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition">
+                <button id="sync-key-btn" title="Set Family Sync Key" class="flex items-center gap-1.5 px-2.5 py-1.5 text-xs sm:text-sm font-medium bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm active:bg-slate-100 dark:active:bg-slate-700 transition">
                     <span id="sync-status-dot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                     <i class="fa-solid fa-users text-slate-500"></i>
-                    <span id="sync-key-label" class="max-w-[120px] truncate">Family Sync</span>
+                    <span id="sync-key-label" class="max-w-[80px] sm:max-w-[120px] truncate">Sync</span>
                 </button>
 
                 <!-- Dark Mode Toggle -->
-                <button id="theme-toggle" class="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition" title="Toggle theme">
-                    <i id="theme-toggle-dark-icon" class="fa-solid fa-moon text-lg hidden"></i>
-                    <i id="theme-toggle-light-icon" class="fa-solid fa-sun text-lg"></i>
+                <button id="theme-toggle" class="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition" title="Toggle theme">
+                    <i id="theme-toggle-dark-icon" class="fa-solid fa-moon text-base sm:text-lg hidden"></i>
+                    <i id="theme-toggle-light-icon" class="fa-solid fa-sun text-base sm:text-lg"></i>
                 </button>
             </div>
         </header>
 
         <!-- Dynamic Category Tabs Header -->
-        <div class="relative mb-6">
+        <div class="relative mb-4 sm:mb-6">
             <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-2">
-                <!-- Tab List Container -->
+                <!-- Tab List Container with smooth mobile scroll -->
                 <div id="tabs-container" class="flex items-center gap-2 overflow-x-auto custom-scrollbar pb-1 max-w-[calc(100%-80px)] sm:max-w-[calc(100%-100px)]">
                     <!-- Dynamic Tabs Inserted Here -->
                 </div>
 
                 <!-- Category Actions -->
                 <div class="flex items-center gap-1 pl-2">
-                    <button id="edit-cat-btn" title="Edit current tab" class="p-2 text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition">
+                    <button id="edit-cat-btn" title="Edit current tab" class="p-2 text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 active:bg-slate-200 dark:active:bg-slate-800 rounded-xl transition">
                         <i class="fa-solid fa-pen-to-square"></i>
                     </button>
-                    <button id="delete-cat-btn" title="Delete current tab" class="p-2 text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition">
+                    <button id="delete-cat-btn" title="Delete current tab" class="p-2 text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 active:bg-slate-200 dark:active:bg-slate-800 rounded-xl transition">
                         <i class="fa-solid fa-trash-can"></i>
                     </button>
                 </div>
@@ -90,10 +100,10 @@
         </div>
 
         <!-- Task Input Section -->
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-3 sm:p-4 mb-6">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-2.5 sm:p-4 mb-4 sm:mb-6">
             <form id="add-task-form" class="flex items-center gap-2">
-                <input type="text" id="task-input" placeholder="Add a new task..." required class="flex-1 bg-transparent px-3 py-2 text-sm sm:text-base focus:outline-none text-slate-800 dark:text-slate-100 placeholder-slate-400">
-                <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg text-sm transition flex items-center gap-2 shadow-sm">
+                <input type="text" id="task-input" placeholder="Add a new task..." required class="flex-1 bg-transparent px-3 py-2 text-base focus:outline-none text-slate-800 dark:text-slate-100 placeholder-slate-400 select-text">
+                <button type="submit" class="px-4 py-2.5 bg-indigo-600 active:bg-indigo-700 text-white font-medium rounded-xl text-sm transition flex items-center gap-2 shadow-sm shrink-0">
                     <i class="fa-solid fa-plus"></i>
                     <span class="hidden sm:inline">Add Task</span>
                 </button>
@@ -101,17 +111,17 @@
         </div>
 
         <!-- Filter Controls -->
-        <div class="flex items-center justify-between mb-4 px-1 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-            <div class="flex items-center gap-1 bg-slate-200 dark:bg-slate-800 p-1 rounded-lg">
-                <button data-filter="all" class="filter-btn px-3 py-1 rounded-md font-medium transition bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm">All</button>
-                <button data-filter="active" class="filter-btn px-3 py-1 rounded-md font-medium transition hover:text-slate-900 dark:hover:text-white">Active</button>
-                <button data-filter="completed" class="filter-btn px-3 py-1 rounded-md font-medium transition hover:text-slate-900 dark:hover:text-white">Completed</button>
+        <div class="flex items-center justify-between mb-3 px-1 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+            <div class="flex items-center gap-1 bg-slate-200 dark:bg-slate-800 p-1 rounded-xl">
+                <button data-filter="all" class="filter-btn px-3 py-1.5 rounded-lg font-medium transition bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm">All</button>
+                <button data-filter="active" class="filter-btn px-3 py-1.5 rounded-lg font-medium transition hover:text-slate-900 dark:hover:text-white">Active</button>
+                <button data-filter="completed" class="filter-btn px-3 py-1.5 rounded-lg font-medium transition hover:text-slate-900 dark:hover:text-white">Done</button>
             </div>
-            <span id="task-counter" class="font-medium">0 tasks remaining</span>
+            <span id="task-counter" class="font-medium">0 left</span>
         </div>
 
         <!-- Task List -->
-        <main class="flex-1">
+        <main class="flex-1 pb-20 sm:pb-0">
             <div id="tasks-list" class="space-y-2">
                 <!-- Dynamic Tasks Render Here -->
             </div>
@@ -119,48 +129,48 @@
 
         <!-- Floating Action Button (+) to Add New Category -->
         <div class="fixed bottom-6 right-6 z-30">
-            <button id="fab-add-category" class="flex items-center justify-center w-14 h-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-lg hover:shadow-indigo-500/30 transition-all transform hover:scale-105 active:scale-95" title="Add New Category">
+            <button id="fab-add-category" class="flex items-center justify-center w-14 h-14 bg-indigo-600 active:bg-indigo-700 text-white rounded-full shadow-lg hover:shadow-indigo-500/30 transition-all transform active:scale-95" title="Add New Category">
                 <i class="fa-solid fa-plus text-xl"></i>
             </button>
         </div>
 
         <!-- Category Modal (Create / Edit) -->
         <div id="category-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-            <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 dark:border-slate-700">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-xl border border-slate-200 dark:border-slate-700">
                 <h3 id="modal-title" class="text-xl font-bold mb-4 text-slate-900 dark:text-white">Create New Category</h3>
                 <form id="category-form" class="space-y-4">
                     <div>
                         <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Category Name</label>
-                        <input type="text" id="cat-name-input" required placeholder="e.g. Home, Fitness, Ideas" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-100">
+                        <input type="text" id="cat-name-input" required placeholder="e.g. Home, Fitness, Ideas" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-100 select-text">
                     </div>
                     
                     <div>
                         <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Color Theme</label>
                         <div class="grid grid-cols-6 gap-2" id="color-selector">
-                            <button type="button" data-color="indigo" class="w-8 h-8 rounded-full bg-indigo-500 ring-2 ring-offset-2 ring-indigo-500"></button>
-                            <button type="button" data-color="emerald" class="w-8 h-8 rounded-full bg-emerald-500"></button>
-                            <button type="button" data-color="amber" class="w-8 h-8 rounded-full bg-amber-500"></button>
-                            <button type="button" data-color="rose" class="w-8 h-8 rounded-full bg-rose-500"></button>
-                            <button type="button" data-color="purple" class="w-8 h-8 rounded-full bg-purple-500"></button>
-                            <button type="button" data-color="sky" class="w-8 h-8 rounded-full bg-sky-500"></button>
+                            <button type="button" data-color="indigo" class="w-9 h-9 rounded-full bg-indigo-500 ring-2 ring-offset-2 ring-indigo-500"></button>
+                            <button type="button" data-color="emerald" class="w-9 h-9 rounded-full bg-emerald-500"></button>
+                            <button type="button" data-color="amber" class="w-9 h-9 rounded-full bg-amber-500"></button>
+                            <button type="button" data-color="rose" class="w-9 h-9 rounded-full bg-rose-500"></button>
+                            <button type="button" data-color="purple" class="w-9 h-9 rounded-full bg-purple-500"></button>
+                            <button type="button" data-color="sky" class="w-9 h-9 rounded-full bg-sky-500"></button>
                         </div>
                     </div>
 
                     <div>
                         <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Icon</label>
                         <div class="grid grid-cols-6 gap-2 text-slate-600 dark:text-slate-300" id="icon-selector">
-                            <button type="button" data-icon="fa-folder" class="p-2 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-center items-center text-indigo-500"><i class="fa-solid fa-folder"></i></button>
-                            <button type="button" data-icon="fa-briefcase" class="p-2 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-center items-center"><i class="fa-solid fa-briefcase"></i></button>
-                            <button type="button" data-icon="fa-cart-shopping" class="p-2 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-center items-center"><i class="fa-solid fa-cart-shopping"></i></button>
-                            <button type="button" data-icon="fa-heart" class="p-2 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-center items-center"><i class="fa-solid fa-heart"></i></button>
-                            <button type="button" data-icon="fa-star" class="p-2 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-center items-center"><i class="fa-solid fa-star"></i></button>
-                            <button type="button" data-icon="fa-house" class="p-2 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-center items-center"><i class="fa-solid fa-house"></i></button>
+                            <button type="button" data-icon="fa-folder" class="p-2 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-center items-center text-indigo-500"><i class="fa-solid fa-folder"></i></button>
+                            <button type="button" data-icon="fa-briefcase" class="p-2 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-center items-center"><i class="fa-solid fa-briefcase"></i></button>
+                            <button type="button" data-icon="fa-cart-shopping" class="p-2 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-center items-center"><i class="fa-solid fa-cart-shopping"></i></button>
+                            <button type="button" data-icon="fa-heart" class="p-2 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-center items-center"><i class="fa-solid fa-heart"></i></button>
+                            <button type="button" data-icon="fa-star" class="p-2 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-center items-center"><i class="fa-solid fa-star"></i></button>
+                            <button type="button" data-icon="fa-house" class="p-2 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-center items-center"><i class="fa-solid fa-house"></i></button>
                         </div>
                     </div>
 
                     <div class="flex justify-end gap-2 pt-4">
-                        <button type="button" id="close-category-modal" class="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition">Cancel</button>
-                        <button type="submit" class="px-4 py-2 text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition shadow-sm">Save Category</button>
+                        <button type="button" id="close-category-modal" class="px-4 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition">Cancel</button>
+                        <button type="submit" class="px-4 py-2.5 text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition shadow-sm">Save Category</button>
                     </div>
                 </form>
             </div>
@@ -168,19 +178,29 @@
 
         <!-- Sync Key Modal -->
         <div id="sync-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-            <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 dark:border-slate-700">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-xl border border-slate-200 dark:border-slate-700">
                 <h3 class="text-xl font-bold mb-2 text-slate-900 dark:text-white">Family Sync Settings</h3>
                 <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Enter a shared secret key (e.g., <strong>smith-family-2026</strong>) on all your family's devices to sync tasks together in real time.</p>
                 <form id="sync-form" class="space-y-4">
                     <div>
                         <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Family Key</label>
-                        <input type="text" id="sync-key-input" required placeholder="our-family-list" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-100">
+                        <input type="text" id="sync-key-input" required placeholder="our-family-list" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-100 select-text">
                     </div>
                     <div class="flex justify-end gap-2 pt-2">
-                        <button type="button" id="close-sync-modal" class="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition">Cancel</button>
-                        <button type="submit" class="px-4 py-2 text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition shadow-sm">Connect Sync</button>
+                        <button type="button" id="close-sync-modal" class="px-4 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition">Cancel</button>
+                        <button type="submit" class="px-4 py-2.5 text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition shadow-sm">Connect Sync</button>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <!-- Alert/Confirm Custom Modal UI (replaces browser alerts) -->
+        <div id="alert-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-sm w-full p-5 shadow-xl border border-slate-200 dark:border-slate-700 text-center">
+                <p id="alert-modal-message" class="text-sm font-medium text-slate-800 dark:text-slate-200 mb-4"></p>
+                <div class="flex justify-center gap-3" id="alert-modal-buttons">
+                    <button id="alert-modal-ok" class="px-5 py-2 bg-indigo-600 text-white rounded-xl text-sm font-medium">OK</button>
+                </div>
             </div>
         </div>
 
@@ -257,12 +277,44 @@
             document.getElementById('theme-toggle-light-icon')?.classList.add('hidden');
         }
 
-        document.getElementById('theme-toggle').addEventListener('click', () => {
+        document.getElementById('theme-toggle')?.addEventListener('click', () => {
             const isDark = document.documentElement.classList.toggle('dark');
             localStorage.theme = isDark ? 'dark' : 'light';
-            document.getElementById('theme-toggle-dark-icon').classList.toggle('hidden', !isDark);
-            document.getElementById('theme-toggle-light-icon').classList.toggle('hidden', isDark);
+            document.getElementById('theme-toggle-dark-icon')?.classList.toggle('hidden', !isDark);
+            document.getElementById('theme-toggle-light-icon')?.classList.toggle('hidden', isDark);
         });
+
+        // Custom Modal Alert replacement
+        function showAlert(msg) {
+            const modal = document.getElementById('alert-modal');
+            const msgEl = document.getElementById('alert-modal-message');
+            const btn = document.getElementById('alert-modal-ok');
+            if (!modal || !msgEl || !btn) return;
+
+            msgEl.textContent = msg;
+            modal.classList.remove('hidden');
+            btn.onclick = () => modal.classList.add('hidden');
+        }
+
+        function showConfirm(msg, onConfirm) {
+            const modal = document.getElementById('alert-modal');
+            const msgEl = document.getElementById('alert-modal-message');
+            const btns = document.getElementById('alert-modal-buttons');
+            if (!modal || !msgEl || !btns) return;
+
+            msgEl.textContent = msg;
+            btns.innerHTML = `
+                <button id="confirm-cancel" class="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-sm font-medium">Cancel</button>
+                <button id="confirm-ok" class="px-4 py-2 bg-rose-600 text-white rounded-xl text-sm font-medium">Delete</button>
+            `;
+            modal.classList.remove('hidden');
+
+            document.getElementById('confirm-cancel').onclick = () => modal.classList.add('hidden');
+            document.getElementById('confirm-ok').onclick = () => {
+                modal.classList.add('hidden');
+                onConfirm();
+            };
+        }
 
         // Initialize Firebase Authentication
         async function initAuth() {
@@ -285,7 +337,7 @@
             if (!currentUser) return;
             if (unsubscribeSync) unsubscribeSync();
 
-            syncKeyLabel.textContent = syncKey;
+            if (syncKeyLabel) syncKeyLabel.textContent = syncKey;
 
             const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'sync_groups', syncKey);
             
@@ -337,13 +389,14 @@
         // Render Date Header
         function renderDate() {
             if (currentDateEl) {
-                const options = { weekday: 'long', month: 'short', day: 'numeric' };
+                const options = { weekday: 'short', month: 'short', day: 'numeric' };
                 currentDateEl.textContent = new Date().toLocaleDateString(undefined, options);
             }
         }
 
         // Render Category Tabs
         function renderCategories() {
+            if (!tabsContainer) return;
             tabsContainer.innerHTML = '';
             categories.forEach(cat => {
                 const uncompletedCount = tasks.filter(t => t.categoryId === cat.id && !t.completed).length;
@@ -351,7 +404,7 @@
 
                 const tabBtn = document.createElement('button');
                 tabBtn.type = 'button';
-                tabBtn.className = `flex items-center gap-2 px-3.5 py-2 rounded-lg font-medium text-sm transition-all whitespace-nowrap border ${
+                tabBtn.className = `flex items-center gap-2 px-3 py-2 rounded-xl font-medium text-xs sm:text-sm transition-all whitespace-nowrap border ${
                     isActive 
                         ? 'bg-indigo-50 dark:bg-indigo-950/50 border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 shadow-sm' 
                         : 'bg-transparent border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -360,7 +413,7 @@
                 tabBtn.innerHTML = `
                     <i class="fa-solid ${cat.icon || 'fa-folder'}"></i>
                     <span>${escapeHtml(cat.name)}</span>
-                    <span class="ml-1 px-1.5 py-0.5 text-xs rounded-full ${
+                    <span class="ml-1 px-1.5 py-0.5 text-[10px] sm:text-xs rounded-full ${
                         isActive 
                             ? 'bg-indigo-200 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200' 
                             : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
@@ -379,6 +432,7 @@
 
         // Render Tasks
         function renderTasks() {
+            if (!tasksList) return;
             tasksList.innerHTML = '';
 
             const categoryTasks = tasks.filter(t => t.categoryId === activeCategoryId);
@@ -389,13 +443,15 @@
             });
 
             const remainingCount = categoryTasks.filter(t => !t.completed).length;
-            taskCounter.textContent = `${remainingCount} task${remainingCount === 1 ? '' : 's'} remaining`;
+            if (taskCounter) {
+                taskCounter.textContent = `${remainingCount} left`;
+            }
 
             if (filteredTasks.length === 0) {
                 tasksList.innerHTML = `
-                    <div class="text-center py-12 bg-white dark:bg-slate-800 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
-                        <i class="fa-solid fa-clipboard-check text-3xl text-slate-300 dark:text-slate-600 mb-2"></i>
-                        <p class="text-slate-500 dark:text-slate-400 text-sm">No tasks in this view</p>
+                    <div class="text-center py-10 bg-white dark:bg-slate-800 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+                        <i class="fa-solid fa-clipboard-check text-2xl text-slate-300 dark:text-slate-600 mb-2"></i>
+                        <p class="text-slate-500 dark:text-slate-400 text-xs sm:text-sm">No tasks in this view</p>
                     </div>
                 `;
                 return;
@@ -403,19 +459,19 @@
 
             filteredTasks.forEach(task => {
                 const item = document.createElement('div');
-                item.className = `group flex items-center justify-between p-3.5 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700/80 shadow-sm transition-all hover:border-slate-300 dark:hover:border-slate-600 ${
+                item.className = `group flex items-center justify-between p-3 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700/80 shadow-sm transition-all ${
                     task.completed ? 'opacity-60 bg-slate-50 dark:bg-slate-800/50' : ''
                 }`;
 
                 item.innerHTML = `
-                    <div class="flex items-center gap-3 flex-1 min-w-0">
-                        <input type="checkbox" ${task.completed ? 'checked' : ''} data-id="${task.id}" class="toggle-task w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
-                        <span class="text-sm sm:text-base text-slate-800 dark:text-slate-200 truncate ${task.completed ? 'line-through text-slate-400 dark:text-slate-500' : ''}">
+                    <div class="flex items-center gap-3 flex-1 min-w-0 pr-2">
+                        <input type="checkbox" ${task.completed ? 'checked' : ''} data-id="${task.id}" class="toggle-task w-5 h-5 rounded-md border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer shrink-0">
+                        <span class="text-sm sm:text-base text-slate-800 dark:text-slate-200 truncate select-text ${task.completed ? 'line-through text-slate-400 dark:text-slate-500' : ''}">
                             ${escapeHtml(task.text)}
                         </span>
                     </div>
-                    <button data-id="${task.id}" class="delete-task opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg transition" title="Delete task">
-                        <i class="fa-solid fa-trash-can"></i>
+                    <button data-id="${task.id}" class="delete-task p-2 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 active:bg-slate-100 dark:active:bg-slate-700 rounded-xl transition shrink-0" title="Delete task">
+                        <i class="fa-solid fa-trash-can text-sm"></i>
                     </button>
                 `;
 
@@ -449,7 +505,7 @@
         }
 
         // Add New Task
-        addTaskForm.addEventListener('submit', (e) => {
+        addTaskForm?.addEventListener('submit', (e) => {
             e.preventDefault();
             const text = taskInput.value.trim();
             if (!text) return;
@@ -484,37 +540,37 @@
         });
 
         // Floating (+) Button - Add Category
-        document.getElementById('fab-add-category').addEventListener('click', () => {
+        document.getElementById('fab-add-category')?.addEventListener('click', () => {
             editingCategoryId = null;
-            modalTitle.textContent = 'Create New Category';
-            catNameInput.value = '';
-            categoryModal.classList.remove('hidden');
+            if (modalTitle) modalTitle.textContent = 'Create New Category';
+            if (catNameInput) catNameInput.value = '';
+            categoryModal?.classList.remove('hidden');
         });
 
         // Edit Category Button
-        document.getElementById('edit-cat-btn').addEventListener('click', () => {
+        document.getElementById('edit-cat-btn')?.addEventListener('click', () => {
             const currentCat = categories.find(c => c.id === activeCategoryId);
             if (!currentCat) return;
             editingCategoryId = currentCat.id;
-            modalTitle.textContent = 'Edit Category';
-            catNameInput.value = currentCat.name;
-            categoryModal.classList.remove('hidden');
+            if (modalTitle) modalTitle.textContent = 'Edit Category';
+            if (catNameInput) catNameInput.value = currentCat.name;
+            categoryModal?.classList.remove('hidden');
         });
 
         // Delete Category Button
-        document.getElementById('delete-cat-btn').addEventListener('click', () => {
+        document.getElementById('delete-cat-btn')?.addEventListener('click', () => {
             if (categories.length <= 1) {
-                alert('You must keep at least one category!');
+                showAlert('You must keep at least one category!');
                 return;
             }
-            if (confirm('Delete this category and all its tasks?')) {
+            showConfirm('Delete this category and all its tasks?', () => {
                 tasks = tasks.filter(t => t.categoryId !== activeCategoryId);
                 categories = categories.filter(c => c.id !== activeCategoryId);
                 activeCategoryId = categories[0].id;
                 renderCategories();
                 renderTasks();
                 saveDataToCloud();
-            }
+            });
         });
 
         // Color & Icon Pickers
@@ -535,7 +591,7 @@
         });
 
         // Save Category Form Submit
-        categoryForm.addEventListener('submit', (e) => {
+        categoryForm?.addEventListener('submit', (e) => {
             e.preventDefault();
             const name = catNameInput.value.trim();
             if (!name) return;
@@ -558,34 +614,34 @@
                 activeCategoryId = newCat.id;
             }
 
-            categoryModal.classList.add('hidden');
+            categoryModal?.classList.add('hidden');
             renderCategories();
             renderTasks();
             saveDataToCloud();
         });
 
-        document.getElementById('close-category-modal').addEventListener('click', () => {
-            categoryModal.classList.add('hidden');
+        document.getElementById('close-category-modal')?.addEventListener('click', () => {
+            categoryModal?.classList.add('hidden');
         });
 
         // Sync Modal Trigger
-        document.getElementById('sync-key-btn').addEventListener('click', () => {
-            syncKeyInput.value = syncKey;
-            syncModal.classList.remove('hidden');
+        document.getElementById('sync-key-btn')?.addEventListener('click', () => {
+            if (syncKeyInput) syncKeyInput.value = syncKey;
+            syncModal?.classList.remove('hidden');
         });
 
-        document.getElementById('close-sync-modal').addEventListener('click', () => {
-            syncModal.classList.add('hidden');
+        document.getElementById('close-sync-modal')?.addEventListener('click', () => {
+            syncModal?.classList.add('hidden');
         });
 
-        syncForm.addEventListener('submit', (e) => {
+        syncForm?.addEventListener('submit', (e) => {
             e.preventDefault();
             const key = syncKeyInput.value.trim().toLowerCase().replace(/\s+/g, '-');
             if (key) {
                 syncKey = key;
                 saveLocal();
                 setupCloudSync();
-                syncModal.classList.add('hidden');
+                syncModal?.classList.add('hidden');
             }
         });
 
